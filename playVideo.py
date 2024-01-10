@@ -4,8 +4,8 @@ from gpiozero import Button
 from pathlib import Path
 from time import sleep
 
-# TODO - prevent screen from turning off? Or will this work even if the screen is off?
-# TODO - run from command line, possibly with debug option to allow fullscreen off.
+# TODO: Test whether proximity sensor will wake display up from sleep. If not, disable screen blanking on the Pi.
+# TODO: Optionally add debug command line argument to turn on and off fullscreen.
 print("Starting program...");
 
 vlc_instance = vlc.Instance()
@@ -21,7 +21,7 @@ button = Button(27)
 # Use this to stop the program when the button is pressed.
 button.when_pressed = cleanup
 
-# TODO: This line is for debugging. Uncomment this when we're ready to go.
+# TODO: Turn off fullscreen for debugging. Make this a CLI argument?
 player.set_fullscreen(True)
 videos = []
 video_files = [
@@ -39,7 +39,7 @@ for video in video_files:
 canPlayNextVideo = True
 
 
-# set up default repeating video as playlist so it can repeat
+# MediaList object is required in order to repeat the repeating video.
 default_video_file = "videos/DefaultVideo.mov"
 repeatingMediaList = vlc_instance.media_list_new()
 listPlayer = vlc_instance.media_list_player_new()
