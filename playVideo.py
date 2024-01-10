@@ -39,7 +39,7 @@ for video in video_files:
 canPlayNextVideo = True
 
 
-# MediaList object is required in order to repeat the repeating video.
+# MediaList object is required in order to loop the repeating video.
 default_video_file = "videos/DefaultVideo.mov"
 repeatingMediaList = vlc_instance.media_list_new()
 listPlayer = vlc_instance.media_list_player_new()
