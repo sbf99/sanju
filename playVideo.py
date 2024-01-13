@@ -8,8 +8,10 @@ from time import sleep
 
 # Use command line aargument "-fs" to turn on fullscreen.
 print("Starting program...");
+basepath = Path(__file__).parent.resolve()
 parser = argparse.ArgumentParser()
 parser.add_argument('-fs', '--fullscreen', action='store_true')
+parser.add_argument('-v', '--videos', action='store', default=os.path.join(basepath, 'videos'))
 args = parser.parse_args()
 
 vlc_instance = vlc.Instance()
@@ -29,14 +31,14 @@ button.when_pressed = cleanup
 
 videos = []
 video_files = [
-    "videos/TestVideo0.mov",
-    "videos/TestVideo1.mov",
-    "videos/TestVideo2.mov",
-    "videos/TestVideo3.mov",
-    "videos/TestVideo4.mov",
-    "videos/TestVideo5.mov"]
+    "TestVideo0.mov",
+    "TestVideo1.mov",
+    "TestVideo2.mov",
+    "TestVideo3.mov",
+    "TestVideo4.mov",
+    "TestVideo5.mov"]
 for video in video_files:
-    fullpath = os.path.join(os.getcwd(), video)
+    fullpath = os.path.join(args.videos, video)
     videos.append(vlc_instance.media_new(fullpath))
 
 # refers to videos above, not the default video
@@ -44,13 +46,13 @@ canPlayNextVideo = True
 
 
 # set up default repeating video as playlist so it can repeat
-default_video_file = "videos/DefaultVideo.mov"
+default_video_file = "DefaultVideo.mov"
 repeatingMediaList = vlc_instance.media_list_new()
 listPlayer = vlc_instance.media_list_player_new()
 listPlayer.set_media_list(repeatingMediaList)
 listPlayer.set_playback_mode(vlc.PlaybackMode(1)) # looping mode
 listPlayer.set_media_player(player)
-repeatingMediaList.add_media(os.path.join(os.getcwd(), default_video_file))
+repeatingMediaList.add_media(os.path.join(args.videos, default_video_file))
 repeatingMediaList.lock()
 default_video_mrl = repeatingMediaList.item_at_index(0).get_mrl()
 repeatingMediaList.unlock()
@@ -85,5 +87,4 @@ while True:
             while not canPlayNextVideo:
                 defaultVideoIsPlaying = default_video_mrl in player.get_media().get_mrl()
                 canPlayNextVideo = (apds.proximity < 1) and defaultVideoIsPlaying
-
 
