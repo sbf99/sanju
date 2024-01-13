@@ -1,15 +1,21 @@
-import board, os, random, vlc
+import argparse, board, os, random, vlc
 from adafruit_apds9960.apds9960 import APDS9960
 from gpiozero import Button
 from pathlib import Path
 from time import sleep
 
-# TODO: Test whether proximity sensor will wake display up from sleep. If not, disable screen blanking on the Pi.
-# TODO: Optionally add debug command line argument to turn on and off fullscreen.
+# TODO - prevent screen from turning off? Or will this work even if the screen is off?
+
+# Use command line aargument "-fs" to turn on fullscreen.
 print("Starting program...");
+parser = argparse.ArgumentParser()
+parser.add_argument('-fs', '--fullscreen', action='store_true')
+args = parser.parse_args()
 
 vlc_instance = vlc.Instance()
 player = vlc_instance.media_player_new()
+player.set_fullscreen(args.fullscreen)
+
 def cleanup():
     player.stop()
     player.set_fullscreen(False)
@@ -21,8 +27,6 @@ button = Button(27)
 # Use this to stop the program when the button is pressed.
 button.when_pressed = cleanup
 
-# TODO: Turn off fullscreen for debugging. Make this a CLI argument?
-player.set_fullscreen(True)
 videos = []
 video_files = [
     "videos/TestVideo0.mov",
@@ -39,7 +43,7 @@ for video in video_files:
 canPlayNextVideo = True
 
 
-# MediaList object is required in order to loop the repeating video.
+# set up default repeating video as playlist so it can repeat
 default_video_file = "videos/DefaultVideo.mov"
 repeatingMediaList = vlc_instance.media_list_new()
 listPlayer = vlc_instance.media_list_player_new()
@@ -59,16 +63,12 @@ def playRandomVideo():
     player.set_media(randomVideo)
     player.play()
     duration = player.get_length()
-    sleep(duration) 
-    
+    sleep(duration)
+
 
 # Set up the sensor
 i2c = board.I2C()
 apds = APDS9960(i2c)
-
-# TODO: delete these two lines? The interrupts don't seem to work.
-# apds.enable_proximity_interrupt = True
-# apds.proximity_interrupt_threshold = (0, 175)
 
 # Start checking sensor.
 apds.enable_proximity = True
@@ -85,7 +85,5 @@ while True:
             while not canPlayNextVideo:
                 defaultVideoIsPlaying = default_video_mrl in player.get_media().get_mrl()
                 canPlayNextVideo = (apds.proximity < 1) and defaultVideoIsPlaying
-                
-
 
 
