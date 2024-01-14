@@ -85,11 +85,12 @@ while True:
             playRandomVideo()
             # don't set play the next video until we are both playing the default video and the proximity sensor is far
             while not canPlayNextVideo:
-                sleep(0.5)
-                timestamp = player.get_time()
-                defaultVideoIsPlaying = False
-                if timestamp < video_timestamps[0]:
-                    defaultVideoIsPlaying = True
-                    if timestamp > (video_timestamps[0] - black_screen_length):
-                        player.set_time(0)
-                canPlayNextVideo = (apds.proximity <= 0) and defaultVideoIsPlaying
+                if apds.proximity <= proximity_threshold:
+                    sleep(0.5) # wait to check it's still gone after half a second.
+                    if apds.proximity <= proximity_threshold:
+                        # now we know the card is gone.
+                        timestamp = player.get_time()
+                        if timestamp < video_timestamps[0]:
+                            canPlayNextVideo = True
+                            if timestamp > (video_timestamps[0] - black_screen_length):
+                                player.set_time(0)
