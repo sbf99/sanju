@@ -74,17 +74,17 @@ apds = APDS9960(i2c)
 
 # Start checking sensor.
 apds.enable_proximity = True
+# proximity value is from 0 (far) to 255 (close)
+proximity_threshold = 10
 while True:
-    # proximity value is from 0 (far) to 255 (close)
-    if canPlayNextVideo and apds.proximity > 50:
+    if canPlayNextVideo and apds.proximity > proximity_threshold:
         # Wait and check that it is still this close after half a second.
         sleep(.5)
-        if apds.proximity > 50:
+        if apds.proximity > proximity_threshold:
             # set this immediately so we don't keep going
             canPlayNextVideo = False
             playRandomVideo()
             # don't set play the next video until we are both playing the default video and the proximity sensor is far
             while not canPlayNextVideo:
                 defaultVideoIsPlaying = default_video_mrl in player.get_media().get_mrl()
-                canPlayNextVideo = (apds.proximity < 1) and defaultVideoIsPlaying
-
+                canPlayNextVideo = (apds.proximity <= proximity_threshold) and defaultVideoIsPlaying
