@@ -6,7 +6,7 @@ from time import sleep
 
 # TODO - prevent screen from turning off? Or will this work even if the screen is off?
 
-# Use command line aargument "-fs" to turn on fullscreen.
+# Use command line argument "-fs" to turn on fullscreen.
 print("Starting program...");
 basepath = Path(__file__).parent.resolve()
 parser = argparse.ArgumentParser()
@@ -29,44 +29,38 @@ button = Button(27)
 # Use this to stop the program when the button is pressed.
 button.when_pressed = cleanup
 
-videos = []
-video_files = [
-    "TestVideo0.mov",
-    "TestVideo1.mov",
-    "TestVideo2.mov",
-    "TestVideo3.mov",
-    "TestVideo4.mov",
-    "TestVideo5.mov"]
-for video in video_files:
-    fullpath = os.path.join(args.videos, video)
-    videos.append(vlc_instance.media_new(fullpath))
+# TODO - possibly look into using chapter markers
+black_screen_length = 3000 #ms
+video_timestamps = [ # in milliseconds
+    19000, # dog
+    28000, # poe the cat
+    40000, # fan
+    46000, # purple doll
+    55000, # wooden cat
+    64000, # horse stuffie
+    76000, # monkey
+    86000, # end black screen
+]
 
-# refers to videos above, not the default video
+# Note: Just to test that both types work, we have both files.
+#fullpath = os.path.join(args.videos, "all_videos.mov")
+fullpath = os.path.join(args.videos, "AllVideosTest.mp4")
+media = vlc_instance.media_new(fullpath)
+player.set_media(media)
+
+# refers to the non-default random video segments
 canPlayNextVideo = True
 
-
-# set up default repeating video as playlist so it can repeat
-default_video_file = "DefaultVideo.mov"
-repeatingMediaList = vlc_instance.media_list_new()
-listPlayer = vlc_instance.media_list_player_new()
-listPlayer.set_media_list(repeatingMediaList)
-listPlayer.set_playback_mode(vlc.PlaybackMode(1)) # looping mode
-listPlayer.set_media_player(player)
-repeatingMediaList.add_media(os.path.join(args.videos, default_video_file))
-repeatingMediaList.lock()
-default_video_mrl = repeatingMediaList.item_at_index(0).get_mrl()
-repeatingMediaList.unlock()
-listPlayer.play()
-
 def playRandomVideo():
-    listPlayer.pause()
-    # randomly select a video in the list and play it
-    randomVideo = random.choice(videos)
-    player.set_media(randomVideo)
-    player.play()
-    duration = player.get_length()
-    sleep(duration)
-
+    # last video segment is a black screen, so don't include it
+    video_index = random.randint(0, len(video_timestamps) - 2)
+    start_time = video_timestamps[video_index]
+    duration = video_timestamps[video_index + 1] - video_timestamps[video_index]
+    player.set_time(start_time)
+    while player.get_time() < (video_timestamps[video_index + 1] - black_screen_length):
+        sleep(0.5)
+    # after playing, go back to default video segment at beginning
+    player.set_time(0)
 
 # Set up the sensor
 i2c = board.I2C()
@@ -76,15 +70,26 @@ apds = APDS9960(i2c)
 apds.enable_proximity = True
 # proximity value is from 0 (far) to 255 (close)
 proximity_threshold = 50
+player.set_time(0)
+player.play()
 while True:
+    sleep(0.5)
+    if player.get_time() > (video_timestamps[0] - black_screen_length):
+        player.set_time(0) # loop the video
     if canPlayNextVideo and apds.proximity > proximity_threshold:
         # Wait and check that it is still this close after half a second.
-        sleep(.5)
+        sleep(0.5)
         if apds.proximity > proximity_threshold:
             # set this immediately so we don't keep going
             canPlayNextVideo = False
             playRandomVideo()
             # don't set play the next video until we are both playing the default video and the proximity sensor is far
             while not canPlayNextVideo:
-                defaultVideoIsPlaying = default_video_mrl in player.get_media().get_mrl()
+                sleep(0.5)
+                timestamp = player.get_time()
+                defaultVideoIsPlaying = False
+                if timestamp < video_timestamps[0]:
+                    defaultVideoIsPlaying = True
+                    if timestamp > (video_timestamps[0] - black_screen_length):
+                        player.set_time(0)
                 canPlayNextVideo = (apds.proximity <= 0) and defaultVideoIsPlaying

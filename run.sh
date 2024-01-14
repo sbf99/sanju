@@ -1,2 +1,2 @@
 #!/bin/bash
-python ~/SanjuTree/playVideo.py
+python ~/SanjuTree/playVideo.py -fs
