@@ -7,12 +7,16 @@ from time import sleep
 # TODO - prevent screen from turning off? Or will this work even if the screen is off?
 
 # Use command line argument "-fs" to turn on fullscreen.
-print("Starting program...");
+print("Starting Sanju Tree program...");
 basepath = Path(__file__).parent.resolve()
 parser = argparse.ArgumentParser()
 parser.add_argument('-fs', '--fullscreen', action='store_true')
-parser.add_argument('-v', '--videos', action='store', default=os.path.join(basepath, 'videos'))
+parser.add_argument('-v', '--video', action='store', default=os.path.join(basepath, 'all_videos.mov'))
 args = parser.parse_args()
+
+# testing
+print(args.video)
+
 
 vlc_instance = vlc.Instance()
 player = vlc_instance.media_player_new()
@@ -43,9 +47,9 @@ video_timestamps = [ # in milliseconds
 ]
 
 # Note: Just to test that both types work, we have both files.
-#fullpath = os.path.join(args.videos, "all_videos.mov")
-fullpath = os.path.join(args.videos, "AllVideosTest.mp4")
-media = vlc_instance.media_new(fullpath)
+#fullpath = os.path.join(args.video, "all_videos.mov")
+#fullpath = os.path.join(args.video, "AllVideosTest.mp4")
+media = vlc_instance.media_new(args.video)
 player.set_media(media)
 
 # refers to the non-default random video segments
