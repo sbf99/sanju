@@ -15,7 +15,7 @@ parser.add_argument('-v', '--video', action='store', default=os.path.join(basepa
 args = parser.parse_args()
 
 # testing
-print(args.video)
+print("Using video file: " + args.video)
 
 
 vlc_instance = vlc.Instance()
@@ -60,10 +60,12 @@ def playRandomVideo():
     video_index = random.randint(0, len(video_timestamps) - 2)
     start_time = video_timestamps[video_index]
     duration = video_timestamps[video_index + 1] - video_timestamps[video_index]
+    print("Setting start time of next video to: " + str(start_time))
     player.set_time(start_time)
     while player.get_time() < (video_timestamps[video_index + 1] - black_screen_length):
         sleep(0.5)
     # after playing, go back to default video segment at beginning
+    print("Setting start time of next video to: 0")
     player.set_time(0)
 
 # Set up the sensor
@@ -79,6 +81,7 @@ player.play()
 while True:
     sleep(0.5)
     if player.get_time() > (video_timestamps[0] - black_screen_length):
+        print("starting loop video")
         player.set_time(0) # loop the video
     if canPlayNextVideo and apds.proximity > proximity_threshold:
         # Wait and check that it is still this close after half a second.
@@ -97,4 +100,5 @@ while True:
                         if timestamp < video_timestamps[0]:
                             canPlayNextVideo = True
                             if timestamp > (video_timestamps[0] - black_screen_length):
+                                print("restarting loop video")
                                 player.set_time(0)
