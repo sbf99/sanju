@@ -4,8 +4,6 @@ from gpiozero import Button
 from pathlib import Path
 from time import sleep
 
-# TODO - prevent screen from turning off? Or will this work even if the screen is off?
-
 # Use command line argument "-fs" to turn on fullscreen.
 print("Starting Sanju Tree program...");
 basepath = Path(__file__).parent.resolve()
