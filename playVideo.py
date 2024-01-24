@@ -9,7 +9,7 @@ print("Starting Sanju Tree program...");
 basepath = Path(__file__).parent.resolve()
 parser = argparse.ArgumentParser()
 parser.add_argument('-fs', '--fullscreen', action='store_true')
-parser.add_argument('-v', '--video', action='store', default=os.path.join(basepath, 'all_videos.mov'))
+parser.add_argument('-v', '--video', action='store', default=os.path.join(basepath, 'Sanju Project - Test 20240121.mp4'))
 args = parser.parse_args()
 
 # testing
@@ -31,18 +31,24 @@ button = Button(27)
 # Use this to stop the program when the button is pressed.
 button.when_pressed = cleanup
 
-# TODO - possibly look into using chapter markers
-black_screen_length = 3000 #ms
-video_timestamps = [ # in milliseconds
-    19000, # dog
-    28000, # poe the cat
-    40000, # fan
-    46000, # purple doll
-    55000, # wooden cat
-    64000, # horse stuffie
-    76000, # monkey
-    86000, # end black screen
+black_screen_length = 3000 # milliseconds
+#video_duration = 18000 # milliseconds
+video_timestamps = [ # milliseconds
+    22000,
+    44000,
+    66000,
+    88000
 ]
+# video_timestamps = [ # in milliseconds
+#     19000, # dog
+#     28000, # poe the cat
+#     40000, # fan
+#     46000, # purple doll
+#     55000, # wooden cat
+#     64000, # horse stuffie
+#     76000, # monkey
+#     86000, # end black screen
+# ]
 
 # Note: Just to test that both types work, we have both files.
 #fullpath = os.path.join(args.video, "all_videos.mov")
@@ -72,8 +78,12 @@ apds = APDS9960(i2c)
 
 # Start checking sensor.
 apds.enable_proximity = True
-# proximity value is from 0 (far) to 255 (close)
-proximity_threshold = 50
+# Proximity value is from 0 (far) to 255 (close).
+# When the IR-transmissive material is covering the sensor,
+# default value ranges from 1-200ish, but when the card is then
+# placed on top of the IR-transmissive plastic, the value is almost
+# always the 255 max. So we'll keep the threshold quite close to that.
+proximity_threshold = 250
 player.set_time(0)
 player.play()
 while True:
