@@ -1,4 +1,4 @@
-import argparse, board, os, random, vlc
+import argparse, board, math, os, random, vlc
 from adafruit_apds9960.apds9960 import APDS9960
 from gpiozero import Button
 from pathlib import Path
@@ -19,6 +19,8 @@ print("Using video file: " + args.video)
 vlc_instance = vlc.Instance()
 player = vlc_instance.media_player_new()
 player.set_fullscreen(args.fullscreen)
+media = vlc_instance.media_new(args.video)
+player.set_media(media)
 
 def cleanup():
     player.stop()
@@ -31,42 +33,27 @@ button = Button(27)
 # Use this to stop the program when the button is pressed.
 button.when_pressed = cleanup
 
-black_screen_length = 3000 # milliseconds
-#video_duration = 18000 # milliseconds
-video_timestamps = [ # milliseconds
-    22000,
-    44000,
-    66000,
-    88000
-]
-# video_timestamps = [ # in milliseconds
-#     19000, # dog
-#     28000, # poe the cat
-#     40000, # fan
-#     46000, # purple doll
-#     55000, # wooden cat
-#     64000, # horse stuffie
-#     76000, # monkey
-#     86000, # end black screen
-# ]
-
-# Note: Just to test that both types work, we have both files.
-#fullpath = os.path.join(args.video, "all_videos.mov")
-#fullpath = os.path.join(args.video, "AllVideosTest.mp4")
-media = vlc_instance.media_new(args.video)
-player.set_media(media)
+# Duration of black screen between all videos.
+black_screen_length = 3000 # ms
+# Duration of the looping video that we will show, including black screen at the end.
+loop_video_duration = 22000 # ms
+# Duration of each of the individual videos, including black screen at the end.
+video_duration = 22000 # ms
 
 # refers to the non-default random video segments
 canPlayNextVideo = True
 
 def playRandomVideo():
-    # last video segment is a black screen, so don't include it
-    video_index = random.randint(0, len(video_timestamps) - 2)
-    start_time = video_timestamps[video_index]
-    duration = video_timestamps[video_index + 1] - video_timestamps[video_index]
+    file_duration = player.get_length()
+    num_videos = math.ceil((file_duration - loop_video_duration) / video_duration)
+    video_index = random.randint(0, num_videos - 1)
+    print("file duration is " + str(file_duration))
+    print("num_videos is " + str(num_videos))
+    print("video_index is " + str(video_index))
+    start_time = loop_video_duration + (video_index * video_duration)
     print("Setting start time of next video to: " + str(start_time))
     player.set_time(start_time)
-    while player.get_time() < (video_timestamps[video_index + 1] - black_screen_length):
+    while player.get_time() < (start_time + video_duration - black_screen_length):
         sleep(0.5)
     # after playing, go back to default video segment at beginning
     print("Setting start time of next video to: 0")
@@ -88,7 +75,7 @@ player.set_time(0)
 player.play()
 while True:
     sleep(0.5)
-    if player.get_time() > (video_timestamps[0] - black_screen_length):
+    if player.get_time() > (loop_video_duration - black_screen_length):
         print("starting loop video")
         player.set_time(0) # loop the video
     if canPlayNextVideo and apds.proximity > proximity_threshold:
@@ -105,8 +92,8 @@ while True:
                     if apds.proximity <= proximity_threshold:
                         # now we know the card is gone.
                         timestamp = player.get_time()
-                        if timestamp < video_timestamps[0]:
+                        if timestamp < loop_video_duration:
                             canPlayNextVideo = True
-                            if timestamp > (video_timestamps[0] - black_screen_length):
+                            if timestamp > (loop_video_duration - black_screen_length):
                                 print("restarting loop video")
                                 player.set_time(0)
